@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+
+        .header {
+            background-color: #f8f9fa;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .order-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+
+        .order-table th,
+        .order-table td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+
+        .order-table th {
+            background-color: #f8f9fa;
+        }
+
+        .days-overdue {
+            color: #dc3545;
+        }
+
+        .footer {
+            color: #6c757d;
+            font-size: 12px;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="header">
+        <h2>Overdue Purchase Orders Report</h2>
+        <p>Generated on {{ timestamp|date:"F j, Y H:i" }}</p>
+    </div>
+
+    <p>The following purchase orders are past their expected delivery date:</p>
+
+    <table class="order-table">
+        <thead>
+            <tr>
+                <th>PO Number</th>
+                <th>Supplier</th>
+                <th>Expected Delivery</th>
+                <th>Days Overdue</th>
+                <th>Total Value</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for order in orders %}
+            <tr>
+                <td>{{ order.po_number }}</td>
+                <td>{{ order.supplier.name }}</td>
+                <td>{{ order.expected_delivery|date:"M d, Y" }}</td>
+                <td class="days-overdue">
+                    {{ order.expected_delivery|timesince }}
+                </td>
+                <td>${{ order.total|floatformat:2 }}</td>
+                <td>{{ order.get_status_display }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <p>Recommended actions:</p>
+    <ul>
+        <li>Contact suppliers for status updates</li>
+        <li>Update expected delivery dates if necessary</li>
+        <li>Consider alternative suppliers for critical items</li>
+    </ul>
+
+    <div class="footer">
+        <p>This is an automated message from your Inventory Management System.</p>
+        <p>If you have any questions, please contact your system administrator.</p>
+    </div>
+</body>
+
+</html>

@@ -1,0 +1,114 @@
+{% extends 'base.html' %}
+{% load inventory_tags %}
+
+{% block title %}{{ product.name }} - SCM System{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <!-- Product Information -->
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Product Details</h5>
+                </div>
+                <div class="card-body">
+                    <table class="table table-bordered">
+                        <tr>
+                            <th>SKU</th>
+                            <td>{{ product.sku }}</td>
+                        </tr>
+                        <tr>
+                            <th>Category</th>
+                            <td>{{ product.category.name }}</td>
+                        </tr>
+                        <tr>
+                            <th>Current Stock</th>
+                            <td>
+                                {{ product.quantity }}
+                                {% stock_badge product %}
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>Stock Value</th>
+                            <td>{{ product.stock_value|currency }}</td>
+                        </tr>
+                        <tr>
+                            <th>Minimum Stock</th>
+                            <td>{{ product.minimum_stock }}</td>
+                        </tr>
+                        <tr>
+                            <th>Unit Price</th>
+                            <td>{{ product.price|currency }}</td>
+                        </tr>
+                    </table>
+
+                    <div class="mt-3">
+                        <h6>Stock Level</h6>
+                        {% stock_level_bar product.quantity product.minimum_stock product.reorder_point %}
+                    </div>
+
+                    <div class="mt-3">
+                        <a href="{% url 'inventory:product_update' product.pk %}" class="btn btn-primary">Edit
+                            Product</a>
+                        <a href="{% url 'inventory:transaction_create' %}?product={{ product.pk }}"
+                            class="btn btn-success">Record Transaction</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Transaction History -->
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Transaction History</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="stockChart" style="height: 300px;"></canvas>
+                    {% transaction_history transactions %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Stock level chart
+    const ctx = document.getElementById('stockChart').getContext('2d');
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: [{
+                    %
+                    for t in transactions %
+                }
+                '{{ t.transaction_date|date:"M d" }}', {
+                    % endfor %
+                }
+            ],
+            datasets: [{
+                label: 'Stock Level',
+                data: [{
+                    %
+                    for t in transactions %
+                } {
+                    {
+                        t.quantity
+                    }
+                }, {
+                    % endfor %
+                }],
+                borderColor: '#4e73df',
+                tension: 0.1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false
+        }
+    });
+</script>
+{% endblock %}

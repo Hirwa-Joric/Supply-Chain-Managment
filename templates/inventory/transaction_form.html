@@ -1,0 +1,102 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}Record Transaction - SCM System{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-lg-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Record Inventory Transaction</h5>
+                </div>
+                <div class="card-body">
+                    {% if product %}
+                    <div class="alert alert-info mb-4">
+                        <h6 class="mb-1">Selected Product: {{ product.name }}</h6>
+                        <p class="mb-0">Current Stock: {{ product.quantity }} units</p>
+                    </div>
+                    {% endif %}
+
+                    <form method="post" class="needs-validation" novalidate>
+                        {% csrf_token %}
+
+                        {% if not product %}
+                        {{ form.product|as_crispy_field }}
+                        {% endif %}
+
+                        {{ form.transaction_type|as_crispy_field }}
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                {{ form.quantity|as_crispy_field }}
+                            </div>
+                            <div class="col-md-6">
+                                {{ form.unit_price|as_crispy_field }}
+                            </div>
+                        </div>
+
+                        {{ form.reference_number|as_crispy_field }}
+                        {{ form.notes|as_crispy_field }}
+
+                        <div class="mt-4">
+                            <button type="submit" class="btn btn-primary">Record Transaction</button>
+                            {% if product %}
+                            <a href="{% url 'inventory:product_detail' product.pk %}"
+                                class="btn btn-secondary">Cancel</a>
+                            {% else %}
+                            <a href="{% url 'inventory:product_list' %}" class="btn btn-secondary">Cancel</a>
+                            {% endif %}
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Form validation
+    (function () {
+        'use strict';
+        const forms = document.querySelectorAll('.needs-validation');
+        Array.from(forms).forEach(form => {
+            form.addEventListener('submit', event => {
+                if (!form.checkValidity()) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                }
+                form.classList.add('was-validated');
+            }, false);
+        });
+    })();
+
+    // Dynamic form behavior
+    document.addEventListener('DOMContentLoaded', function () {
+        const transactionType = document.getElementById('id_transaction_type');
+        const quantityField = document.getElementById('id_quantity');
+        const unitPriceField = document.getElementById('id_unit_price');
+
+        transactionType.addEventListener('change', function () {
+            // Reset validation classes
+            quantityField.classList.remove('is-invalid');
+            unitPriceField.classList.remove('is-invalid');
+
+            // Show/hide unit price based on transaction type
+            if (this.value === 'SALE' || this.value === 'PURCHASE') {
+                unitPriceField.parentElement.style.display = 'block';
+                unitPriceField.required = true;
+            } else {
+                unitPriceField.parentElement.style.display = 'none';
+                unitPriceField.required = false;
+            }
+        });
+
+        // Trigger initial state
+        transactionType.dispatchEvent(new Event('change'));
+    });
+</script>
+{% endblock %}

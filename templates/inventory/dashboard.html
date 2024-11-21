@@ -1,0 +1,266 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load inventory_tags %}
+
+{% block title %}Dashboard - SCM System{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Date Range Filter -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="get" class="row align-items-center">
+                {{ date_form.as_p }}
+                <div class="col-auto">
+                    <button type="submit" class="btn btn-primary">Apply Filter</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Stats Cards Row -->
+    <div class="row mb-4">
+        <!-- Total Products -->
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card stats-card primary h-100">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-uppercase mb-1">Total Products</div>
+                            <div class="h5 mb-0 font-weight-bold">{{ total_products }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-box fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Low Stock Alert -->
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card stats-card warning h-100">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-uppercase mb-1">Low Stock Items</div>
+                            <div class="h5 mb-0 font-weight-bold">{{ low_stock_products }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-exclamation-triangle fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Total Inventory Value -->
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card stats-card success h-100">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-uppercase mb-1">Inventory Value</div>
+                            <div class="h5 mb-0 font-weight-bold">${{ inventory_value|floatformat:2 }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-dollar-sign fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Active Suppliers -->
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card stats-card info h-100">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-uppercase mb-1">Active Suppliers</div>
+                            <div class="h5 mb-0 font-weight-bold">{{ active_suppliers }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-truck fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts Row -->
+    <div class="row mb-4">
+        <!-- Monthly Transactions Chart -->
+        <div class="col-xl-8 col-lg-7">
+            <div class="card chart-container mb-4">
+                <div class="card-header">
+                    <h6 class="m-0 font-weight-bold">Monthly Transaction Trends</h6>
+                </div>
+                <div class="card-body">
+                    <canvas id="monthlyTransactionsChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Top Products Chart -->
+        <div class="col-xl-4 col-lg-5">
+            <div class="card chart-container mb-4">
+                <div class="card-header">
+                    <h6 class="m-0 font-weight-bold">Top Products</h6>
+                </div>
+                <div class="card-body">
+                    <canvas id="topProductsChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tables Row -->
+    <div class="row">
+        <!-- Recent Transactions -->
+        <div class="col-xl-8 col-lg-7">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h6 class="m-0 font-weight-bold">Recent Transactions</h6>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Product</th>
+                                    <th>Type</th>
+                                    <th>Quantity</th>
+                                    <th>Value</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for transaction in recent_transactions %}
+                                <tr>
+                                    <td>{{ transaction.transaction_date|date:"M d, Y" }}</td>
+                                    <td>{{ transaction.product.name }}</td>
+                                    <td>
+                                        <span class="badge {% if transaction.transaction_type == 'PURCHASE' %}bg-success
+                                                         {% elif transaction.transaction_type == 'SALE' %}bg-primary
+                                                         {% else %}bg-secondary{% endif %}">
+                                            {{ transaction.get_transaction_type_display }}
+                                        </span>
+                                    </td>
+                                    <td>{{ transaction.quantity }}</td>
+                                    <td>${{ transaction.unit_price|multiply:transaction.quantity|floatformat:2 }}</td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="5" class="text-center">No recent transactions</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pending Orders -->
+        <div class="col-xl-4 col-lg-5">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h6 class="m-0 font-weight-bold">Pending Purchase Orders</h6>
+                </div>
+                <div class="card-body">
+                    <div class="list-group">
+                        {% for order in pending_orders %}
+                        <a href="{% url 'inventory:purchase_order_detail' order.pk %}"
+                            class="list-group-item list-group-item-action">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h6 class="mb-1">{{ order.po_number }}</h6>
+                                <small>{{ order.order_date|date:"M d" }}</small>
+                            </div>
+                            <p class="mb-1">{{ order.supplier.name }}</p>
+                            <small>${{ order.total|floatformat:2 }} - {{ order.get_status_display }}</small>
+                        </a>
+                        {% empty %}
+                        <p class="text-center mb-0">No pending orders</p>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    // Monthly Transactions Chart
+    const monthlyTransactionsCtx = document.getElementById('monthlyTransactionsChart').getContext('2d');
+    new Chart(monthlyTransactionsCtx, {
+        type: 'line',
+        data: {
+            labels: [{
+                    %
+                    for item in monthly_transactions %
+                }
+                '{{ item.month|date:"M Y" }}', {
+                    % endfor %
+                }
+            ],
+            datasets: [{
+                label: 'Transaction Value',
+                data: [{
+                    %
+                    for item in monthly_transactions %
+                } {
+                    {
+                        item.total_value
+                    }
+                }, {
+                    % endfor %
+                }],
+                borderColor: '#4e73df',
+                tension: 0.3
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false
+        }
+    });
+
+    // Top Products Chart
+    const topProductsCtx = document.getElementById('topProductsChart').getContext('2d');
+    new Chart(topProductsCtx, {
+        type: 'doughnut',
+        data: {
+            labels: [{
+                    %
+                    for product in top_products %
+                }
+                '{{ product.name }}', {
+                    % endfor %
+                }
+            ],
+            datasets: [{
+                data: [{
+                    %
+                    for product in top_products %
+                } {
+                    {
+                        product.total_sales
+                    }
+                }, {
+                    % endfor %
+                }],
+                backgroundColor: ['#4e73df', '#1cc88a', '#36b9cc', '#f6c23e', '#e74a3b']
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false
+        }
+    });
+</script>
+{% endblock %}

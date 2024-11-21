@@ -1,0 +1,35 @@
+{% load inventory_tags %}
+
+<div class="list-group">
+    {% for transaction in transactions %}
+    <div class="list-group-item">
+        <div class="d-flex w-100 justify-content-between">
+            <h6 class="mb-1">
+                {% if transaction.transaction_type == 'PURCHASE' %}
+                <i class="fas fa-arrow-circle-up text-success"></i>
+                {% elif transaction.transaction_type == 'SALE' %}
+                <i class="fas fa-arrow-circle-down text-danger"></i>
+                {% else %}
+                <i class="fas fa-exchange-alt text-info"></i>
+                {% endif %}
+                {{ transaction.get_transaction_type_display }}
+            </h6>
+            <small class="text-muted">{{ transaction.transaction_date|date:"M d, Y H:i" }}</small>
+        </div>
+        <p class="mb-1">
+            Quantity: <strong>{{ transaction.quantity }}</strong>
+            {% if transaction.unit_price %}
+            @ ${{ transaction.unit_price|floatformat:2 }}
+            = ${{ transaction.quantity|multiply:transaction.unit_price|floatformat:2 }}
+            {% endif %}
+        </p>
+        {% if transaction.reference_number %}
+        <small class="text-muted">Ref: {{ transaction.reference_number }}</small>
+        {% endif %}
+    </div>
+    {% empty %}
+    <div class="list-group-item text-center text-muted">
+        No transactions found
+    </div>
+    {% endfor %}
+</div>

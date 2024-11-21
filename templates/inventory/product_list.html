@@ -1,0 +1,98 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Products - SCM System{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Page Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3">Products</h1>
+        <a href="{% url 'inventory:product_create' %}" class="btn btn-primary">
+            <i class="fas fa-plus"></i> Add Product
+        </a>
+    </div>
+
+    <!-- Search/Filter Card -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-4">
+                    {{ search_form.query }}
+                </div>
+                <div class="col-md-2">
+                    {{ search_form.category }}
+                </div>
+                <div class="col-md-2">
+                    {{ search_form.supplier }}
+                </div>
+                <div class="col-md-2">
+                    {{ search_form.stock_status }}
+                </div>
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-primary w-100">Search</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Products Grid -->
+    <div class="row">
+        {% for product in products %}
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <h5 class="card-title mb-0">{{ product.name }}</h5>
+                        <span class="badge {% if product.stock_status == 'IN_STOCK' %}bg-success
+                                         {% elif product.stock_status == 'LOW_STOCK' %}bg-warning
+                                         {% else %}bg-danger{% endif %}">
+                            {{ product.get_stock_status_display }}
+                        </span>
+                    </div>
+                    <p class="card-text text-muted">SKU: {{ product.sku }}</p>
+                    <hr>
+                    <div class="mb-2">
+                        <small class="text-muted">Category:</small>
+                        <span>{{ product.category.name }}</span>
+                    </div>
+                    <div class="mb-2">
+                        <small class="text-muted">Quantity:</small>
+                        <span>{{ product.quantity }}</span>
+                    </div>
+                    <div class="mb-2">
+                        <small class="text-muted">Price:</small>
+                        <span>${{ product.price }}</span>
+                    </div>
+                    <div class="mb-3">
+                        <small class="text-muted">Supplier:</small>
+                        <span>{{ product.supplier.name|default:"Not assigned" }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <a href="{% url 'inventory:product_detail' product.pk %}"
+                            class="btn btn-sm btn-outline-primary">
+                            <i class="fas fa-eye"></i> View
+                        </a>
+                        <a href="{% url 'inventory:product_update' product.pk %}"
+                            class="btn btn-sm btn-outline-secondary">
+                            <i class="fas fa-edit"></i> Edit
+                        </a>
+                        <a href="{% url 'inventory:transaction_create' %}?product={{ product.pk }}"
+                            class="btn btn-sm btn-outline-success">
+                            <i class="fas fa-exchange-alt"></i> Stock
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12">
+            <div class="alert alert-info">
+                No products found.
+                <a href="{% url 'inventory:product_create' %}">Add your first product</a>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %} 

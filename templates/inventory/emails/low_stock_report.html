@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+
+        .header {
+            background-color: #f8f9fa;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .product-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+
+        .product-table th,
+        .product-table td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+
+        .product-table th {
+            background-color: #f8f9fa;
+        }
+
+        .warning {
+            color: #dc3545;
+        }
+
+        .footer {
+            color: #6c757d;
+            font-size: 12px;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="header">
+        <h2>Low Stock Alert Report</h2>
+        <p>Generated on {{ timestamp|date:"F j, Y H:i" }}</p>
+    </div>
+
+    <p>The following products have reached or fallen below their minimum stock levels:</p>
+
+    <table class="product-table">
+        <thead>
+            <tr>
+                <th>Product</th>
+                <th>SKU</th>
+                <th>Current Stock</th>
+                <th>Minimum Stock</th>
+                <th>Supplier</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for product in products %}
+            <tr>
+                <td>{{ product.name }}</td>
+                <td>{{ product.sku }}</td>
+                <td>{{ product.quantity }}</td>
+                <td>{{ product.minimum_stock }}</td>
+                <td>{{ product.supplier.name|default:"Not assigned" }}</td>
+                <td class="warning">
+                    {% if product.quantity <= 0 %}
+                    Out of Stock
+                    {% else %}
+                    Low Stock
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <p>Recommended actions:</p>
+    <ul>
+        <li>Review current stock levels</li>
+        <li>Check pending purchase orders</li>
+        <li>Contact suppliers if necessary</li>
+    </ul>
+
+    <div class="footer">
+        <p>This is an automated message from your Inventory Management System.</p>
+        <p>If you have any questions, please contact your system administrator.</p>
+    </div>
+</body>
+
+</html>

@@ -1,0 +1,119 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}
+{% if form.instance.pk %}Edit{% else %}Create{% endif %} Product - SCM System
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        {% if form.instance.pk %}
+                        Edit Product: {{ form.instance.name }}
+                        {% else %}
+                        Create New Product
+                        {% endif %}
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="post" class="needs-validation" novalidate>
+                        {% csrf_token %}
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                {{ form.name|as_crispy_field }}
+                            </div>
+                            <div class="col-md-6">
+                                {{ form.sku|as_crispy_field }}
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                {{ form.category|as_crispy_field }}
+                            </div>
+                            <div class="col-md-6">
+                                {{ form.supplier|as_crispy_field }}
+                            </div>
+                        </div>
+
+                        {{ form.description|as_crispy_field }}
+
+                        <div class="row">
+                            <div class="col-md-4">
+                                {{ form.price|as_crispy_field }}
+                            </div>
+                            <div class="col-md-4">
+                                {{ form.minimum_stock|as_crispy_field }}
+                            </div>
+                            <div class="col-md-4">
+                                {{ form.reorder_point|as_crispy_field }}
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                {{ form.location|as_crispy_field }}
+                            </div>
+                            <div class="col-md-6">
+                                {{ form.barcode|as_crispy_field }}
+                            </div>
+                        </div>
+
+                        {{ form.is_active|as_crispy_field }}
+
+                        <div class="mt-4">
+                            <button type="submit" class="btn btn-primary">
+                                {% if form.instance.pk %}Save Changes{% else %}Create Product{% endif %}
+                            </button>
+                            <a href="{% url 'inventory:product_list' %}" class="btn btn-secondary">Cancel</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Form validation
+    (function () {
+        'use strict'
+        var forms = document.querySelectorAll('.needs-validation')
+        Array.prototype.slice.call(forms)
+            .forEach(function (form) {
+                form.addEventListener('submit', function (event) {
+                    if (!form.checkValidity()) {
+                        event.preventDefault()
+                        event.stopPropagation()
+                    }
+                    form.classList.add('was-validated')
+                }, false)
+            })
+    })()
+
+    // Dynamic supplier field based on category
+    document.getElementById('id_category').addEventListener('change', function () {
+        const categoryId = this.value;
+        const supplierField = document.getElementById('id_supplier');
+
+        if (categoryId) {
+            fetch(`/api/suppliers-by-category/${categoryId}/`)
+                .then(response => response.json())
+                .then(data => {
+                    supplierField.innerHTML = '<option value="">---------</option>';
+                    data.forEach(supplier => {
+                        supplierField.innerHTML +=
+                            `<option value="${supplier.id}">${supplier.name}</option>`;
+                    });
+                });
+        }
+    });
+</script>
+{% endblock %}

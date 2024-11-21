@@ -1,0 +1,7 @@
+<div class="progress" style="height: 20px;">
+    <div class="progress-bar bg-{{ status }}" role="progressbar" style="width: {{ percentage }}%;"
+        aria-valuenow="{{ current }}" aria-valuemin="0" aria-valuemax="{{ maximum }}">
+        {{ current }}/{{ maximum }}
+    </div>
+</div>
+<small class="text-muted">Minimum Stock: {{ minimum }}</small>
