@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+
+{% block title %}Login - IGIHOZO Feedus{% endblock %}
+
+{% block content %}
+<div class="relative flex items-center align-middle justify-center !min-h-screen w-full">
+    
+<div class="w-full max-w-sm bg-white shadow-md rounded-lg p-6">
+    <h2 class="text-2xl font-semibold text-gray-800 text-center mb-4">Login</h2>
+    <form method="post" class="space-y-4">
+        {% csrf_token %}
+
+        <div>
+            <label for="username" class="block text-sm font-medium text-gray-700">Username:</label>
+            <input id="username" type="text" name="username" required
+                   class="mt-1 w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+        </div>
+
+        <div>
+            <label for="password" class="block text-sm font-medium text-gray-700">Password:</label>
+            <input id="password" type="password" name="password" required
+                   class="mt-1 w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+        </div>
+
+            <div>
+                <button type="submit" class="w-full  py-2 text-yellow-900 font-semibold rounded-lg transition duration-200 bg-gradient-to-b from-yellow-200 to-yellow-300 hover:to-red-300 active:from-yellow-400 focus:from-red-400">
+                    Login
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

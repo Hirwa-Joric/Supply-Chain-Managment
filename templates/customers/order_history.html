@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+
+{% block title %}Restaurant Dashboard - IGIHOZO Feedus{% endblock %}
+
+{% block content %}
+<div class="container mx-auto py-8">
+    <!-- Return Button -->
+    <button onclick="history.back()" class="mb-4 px-4 py-2 text-yellow-900 font-semibold rounded-lg hover:bg-blue-600 bg-gradient-to-b from-yellow-200 to-yellow-300 hover:to-red-300 active:from-yellow-400 focus:from-red-400">
+        &larr; Back
+    </button>
+
+    <h2 class="text-3xl font-semibold text-gray-800 text-center mb-6">Order History</h2>
+
+    <div class="grid gap-6 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+        {% for order in orders %}
+            <div class="bg-white rounded-lg shadow-md p-4">
+                <h3 class="text-lg font-semibold text-gray-800">{{ order.menu_item }}</h3>
+                <p class="text-gray-600 mt-2">Status:
+                    <span class="{% if order.status == 'Completed' %}text-green-600{% elif order.status == 'Pending' %}text-yellow-600{% else %}text-red-600{% endif %}">
+                        {{ order.status }}
+                    </span>
+                </p>
+            </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}
