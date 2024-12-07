@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+
+{% block title %}Add Menu - IGIHOZO Feedus{% endblock %}
+
+{% block content %}
+    <div class="container mx-auto px-4 py-16">
+        <h2 class="text-3xl font-bold text-gray-800 mb-6">
+            Add Menu {% if branch %}to {{ branch.location }}{% endif %}
+        </h2>
+
+        <div class="bg-white shadow-md rounded-lg p-6">
+            <form method="POST" class="space-y-4">
+                {% csrf_token %}
+                {{ form.non_field_errors }}
+
+                <!-- Loop through each field -->
+                {% for field in form %}
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-600 mb-1" for="{{ field.id_for_label }}">
+                            {{ field.label }}
+                        </label>
+                        {{ field }}
+                        {% if field.errors %}
+                            <p class="text-red-500 text-sm mt-1">{{ field.errors|join:" " }}</p>
+                        {% endif %}
+                    </div>
+                {% endfor %}
+
+                <div>
+                    <button type="submit"
+                            class="px-4 py-2 text-yellow-900 font-semibold rounded-lg hover:bg-blue-600 bg-gradient-to-b from-yellow-200 to-yellow-300 hover:to-red-300 active:from-yellow-400 focus:from-red-400">
+                        Add Menu
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+{% endblock %}

@@ -1,0 +1,238 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block extra_head %}
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+{% endblock %}
+
+{% block title %}Analytics - Supply Chain Management{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 sm:px-8 py-8">
+    <!-- Header -->
+    <div class="bg-gradient-to-r from-indigo-500 to-purple-600 rounded-lg shadow-lg p-6 mb-8">
+        <h1 class="text-3xl font-bold text-white mb-2">Supply Chain Analytics</h1>
+        <p class="text-indigo-100">Comprehensive insights into your supply chain performance</p>
+    </div>
+
+    <!-- KPI Summary -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <!-- Total Revenue -->
+        <div class="bg-white rounded-lg shadow-lg p-6 transform hover:scale-105 transition-transform duration-200">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-gray-600 mb-1">Total Revenue</p>
+                    <p class="text-2xl font-bold text-gray-900">${{ total_revenue }}</p>
+                    <p class="text-sm text-green-600">↑ 12.5% vs last month</p>
+                </div>
+                <div class="bg-green-100 rounded-full p-3">
+                    <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                </div>
+            </div>
+        </div>
+
+        <!-- Order Fulfillment Rate -->
+        <div class="bg-white rounded-lg shadow-lg p-6 transform hover:scale-105 transition-transform duration-200">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-gray-600 mb-1">Order Fulfillment Rate</p>
+                    <p class="text-2xl font-bold text-gray-900">{{ fulfillment_rate }}%</p>
+                    <p class="text-sm text-green-600">↑ 3.2% vs last month</p>
+                </div>
+                <div class="bg-blue-100 rounded-full p-3">
+                    <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                </div>
+            </div>
+        </div>
+
+        <!-- Average Order Value -->
+        <div class="bg-white rounded-lg shadow-lg p-6 transform hover:scale-105 transition-transform duration-200">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-gray-600 mb-1">Avg Order Value</p>
+                    <p class="text-2xl font-bold text-gray-900">${{ avg_order_value }}</p>
+                    <p class="text-sm text-red-600">↓ 2.1% vs last month</p>
+                </div>
+                <div class="bg-purple-100 rounded-full p-3">
+                    <svg class="w-8 h-8 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path>
+                    </svg>
+                </div>
+            </div>
+        </div>
+
+        <!-- Inventory Turnover -->
+        <div class="bg-white rounded-lg shadow-lg p-6 transform hover:scale-105 transition-transform duration-200">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-gray-600 mb-1">Inventory Turnover</p>
+                    <p class="text-2xl font-bold text-gray-900">{{ inventory_turnover }}x</p>
+                    <p class="text-sm text-green-600">↑ 1.8% vs last month</p>
+                </div>
+                <div class="bg-yellow-100 rounded-full p-3">
+                    <svg class="w-8 h-8 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                    </svg>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts Section -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+        <!-- Stock Levels Chart -->
+        <div class="bg-white rounded-lg shadow-lg p-6">
+            <h3 class="text-xl font-semibold mb-4">Stock Levels by Category</h3>
+            <div class="h-80">
+                <canvas id="stockLevelsChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Order Trends Chart -->
+        <div class="bg-white rounded-lg shadow-lg p-6">
+            <h3 class="text-xl font-semibold mb-4">Order Trends</h3>
+            <div class="h-80">
+                <canvas id="orderTrendsChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Performance Metrics -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+        <!-- Supplier Performance -->
+        <div class="bg-white rounded-lg shadow-lg p-6">
+            <h3 class="text-xl font-semibold mb-4">Top Performing Suppliers</h3>
+            <div class="overflow-x-auto">
+                <table class="min-w-full">
+                    <thead>
+                        <tr class="bg-gray-50">
+                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Supplier</th>
+                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">On-Time Delivery</th>
+                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Quality Score</th>
+                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Cost Efficiency</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-200">
+                        {% for supplier in top_suppliers %}
+                        <tr class="hover:bg-gray-50">
+                            <td class="px-4 py-3">{{ supplier.name }}</td>
+                            <td class="px-4 py-3">
+                                <div class="flex items-center">
+                                    <div class="w-16 bg-gray-200 rounded-full h-2 mr-2">
+                                        <div class="bg-green-500 rounded-full h-2" style="width: {{ supplier.on_time_delivery }}%"></div>
+                                    </div>
+                                    <span>{{ supplier.on_time_delivery }}%</span>
+                                </div>
+                            </td>
+                            <td class="px-4 py-3">
+                                <div class="flex items-center">
+                                    <div class="w-16 bg-gray-200 rounded-full h-2 mr-2">
+                                        <div class="bg-blue-500 rounded-full h-2" style="width: {{ supplier.quality_score }}%"></div>
+                                    </div>
+                                    <span>{{ supplier.quality_score }}%</span>
+                                </div>
+                            </td>
+                            <td class="px-4 py-3">
+                                <div class="flex items-center">
+                                    <div class="w-16 bg-gray-200 rounded-full h-2 mr-2">
+                                        <div class="bg-purple-500 rounded-full h-2" style="width: {{ supplier.cost_efficiency }}%"></div>
+                                    </div>
+                                    <span>{{ supplier.cost_efficiency }}%</span>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Category Performance -->
+        <div class="bg-white rounded-lg shadow-lg p-6">
+            <h3 class="text-xl font-semibold mb-4">Category Performance</h3>
+            <div class="h-80">
+                <canvas id="categoryPerformanceChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Stock Levels Chart
+    const stockCtx = document.getElementById('stockLevelsChart').getContext('2d');
+    new Chart(stockCtx, {
+        type: 'bar',
+        data: {
+            labels: {{ categories|safe }},
+            datasets: [{
+                label: 'Current Stock',
+                data: {{ stock_levels|safe }},
+                backgroundColor: 'rgba(59, 130, 246, 0.5)',
+                borderColor: 'rgb(59, 130, 246)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+
+    // Order Trends Chart
+    const orderCtx = document.getElementById('orderTrendsChart').getContext('2d');
+    new Chart(orderCtx, {
+        type: 'line',
+        data: {
+            labels: {{ order_dates|safe }},
+            datasets: [{
+                label: 'Orders',
+                data: {{ order_counts|safe }},
+                borderColor: 'rgb(147, 51, 234)',
+                tension: 0.3,
+                fill: false
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+
+    // Category Performance Chart
+    const categoryCtx = document.getElementById('categoryPerformanceChart').getContext('2d');
+    new Chart(categoryCtx, {
+        type: 'radar',
+        data: {
+            labels: ['Revenue', 'Growth', 'Margin', 'Turnover', 'Stock Efficiency'],
+            datasets: {{ category_performance|safe }}
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            elements: {
+                line: {
+                    borderWidth: 3
+                }
+            }
+        }
+    });
+</script>
+{% endblock %}
