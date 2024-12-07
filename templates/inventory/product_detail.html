@@ -1,0 +1,106 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ product.name }} Details{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="max-w-3xl mx-auto">
+        <div class="flex justify-between items-center mb-6">
+            <h1 class="text-2xl font-bold text-gray-900">{{ product.name }}</h1>
+            <a href="{% url 'inventory:product_edit' product.id %}" 
+               class="bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 rounded-md text-sm font-medium">
+                Edit Product
+            </a>
+        </div>
+
+        <div class="bg-white shadow overflow-hidden sm:rounded-lg">
+            <div class="px-4 py-5 sm:px-6">
+                <dl class="grid grid-cols-1 gap-x-4 gap-y-8 sm:grid-cols-2">
+                    <div class="sm:col-span-1">
+                        <dt class="text-sm font-medium text-gray-500">SKU</dt>
+                        <dd class="mt-1 text-sm text-gray-900">{{ product.sku }}</dd>
+                    </div>
+                    <div class="sm:col-span-1">
+                        <dt class="text-sm font-medium text-gray-500">Category</dt>
+                        <dd class="mt-1 text-sm text-gray-900">{{ product.category }}</dd>
+                    </div>
+                    <div class="sm:col-span-1">
+                        <dt class="text-sm font-medium text-gray-500">Current Stock</dt>
+                        <dd class="mt-1 text-sm {% if product.stock_quantity <= product.reorder_point %}text-red-600 font-medium{% else %}text-gray-900{% endif %}">
+                            {{ product.stock_quantity }}
+                        </dd>
+                    </div>
+                    <div class="sm:col-span-1">
+                        <dt class="text-sm font-medium text-gray-500">Reorder Point</dt>
+                        <dd class="mt-1 text-sm text-gray-900">{{ product.reorder_point }}</dd>
+                    </div>
+                    <div class="sm:col-span-1">
+                        <dt class="text-sm font-medium text-gray-500">Unit Price</dt>
+                        <dd class="mt-1 text-sm text-gray-900">${{ product.unit_price|floatformat:2 }}</dd>
+                    </div>
+                    <div class="sm:col-span-1">
+                        <dt class="text-sm font-medium text-gray-500">Supplier</dt>
+                        <dd class="mt-1 text-sm text-gray-900">
+                            <a href="{% url 'inventory:supplier_detail' product.supplier.id %}" class="text-primary-600 hover:text-primary-900">
+                                {{ product.supplier.name }}
+                            </a>
+                        </dd>
+                    </div>
+                    {% if product.description %}
+                    <div class="sm:col-span-2">
+                        <dt class="text-sm font-medium text-gray-500">Description</dt>
+                        <dd class="mt-1 text-sm text-gray-900">{{ product.description|linebreaks }}</dd>
+                    </div>
+                    {% endif %}
+                </dl>
+            </div>
+
+            {% if product.stock_quantity <= product.reorder_point %}
+            <div class="px-4 py-5 sm:px-6 bg-red-50">
+                <div class="rounded-md bg-red-50 p-4">
+                    <div class="flex">
+                        <div class="flex-shrink-0">
+                            <svg class="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+                            </svg>
+                        </div>
+                        <div class="ml-3">
+                            <h3 class="text-sm font-medium text-red-800">
+                                Low Stock Alert
+                            </h3>
+                            <div class="mt-2 text-sm text-red-700">
+                                <p>
+                                    Current stock ({{ product.stock_quantity }}) is at or below reorder point ({{ product.reorder_point }}).
+                                    Consider creating a new purchase order.
+                                </p>
+                            </div>
+                            <div class="mt-4">
+                                <div class="-mx-2 -my-1.5 flex">
+                                    <a href="{% url 'inventory:purchase_order_create' %}?product={{ product.id }}" 
+                                       class="bg-red-50 px-2 py-1.5 rounded-md text-sm font-medium text-red-800 hover:bg-red-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-red-50 focus:ring-red-600">
+                                        Create Purchase Order
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <div class="mt-6 flex justify-end space-x-3">
+            <a href="{% url 'inventory:product_list' %}" 
+               class="bg-white py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500">
+                Back to Products
+            </a>
+            {% if product.stock_quantity > product.reorder_point %}
+            <a href="{% url 'inventory:purchase_order_create' %}?product={{ product.id }}" 
+               class="bg-primary-600 border border-transparent rounded-md shadow-sm py-2 px-4 inline-flex justify-center text-sm font-medium text-white hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500">
+                Create Purchase Order
+            </a>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

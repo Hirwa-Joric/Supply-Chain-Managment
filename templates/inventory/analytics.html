@@ -1,0 +1,182 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Analytics Dashboard{% endblock %}
+
+{% block extra_head %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script>
+{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="mb-6">
+        <h1 class="text-3xl font-bold text-gray-900">Supply Chain Analytics</h1>
+    </div>
+
+    <!-- Top Metrics -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+        <!-- Units per Transaction -->
+        <div class="bg-white rounded-lg shadow p-6">
+            <h3 class="text-lg font-semibold text-gray-700 mb-4">Units per Transaction</h3>
+            <div class="flex items-baseline">
+                <span class="text-3xl font-bold text-primary-600">{{ avg_order_value }}</span>
+                <span class="ml-2 text-sm text-gray-500">APV</span>
+            </div>
+            <div class="mt-4">
+                <span class="text-2xl font-semibold text-primary-600">{{ inventory_turnover }}</span>
+                <span class="text-sm text-gray-500">Inventory Turnover</span>
+            </div>
+        </div>
+
+        <!-- Perfect Order Rate -->
+        <div class="bg-white rounded-lg shadow p-6">
+            <h3 class="text-lg font-semibold text-gray-700 mb-4">POR - Perfect Order Rate</h3>
+            <div class="relative" style="height: 200px;">
+                <canvas id="porChart"></canvas>
+            </div>
+            <p class="text-sm text-gray-500 mt-4">Orders without any late shipments & damaged items</p>
+        </div>
+
+        <!-- Cost of Carry -->
+        <div class="bg-white rounded-lg shadow p-6">
+            <h3 class="text-lg font-semibold text-gray-700 mb-4">Cost of Carry MTD</h3>
+            <div class="relative" style="height: 200px;">
+                <canvas id="costOfCarryChart"></canvas>
+            </div>
+            <div class="mt-4 text-sm">
+                {% for component, percentage in cost_percentages.items %}
+                <div class="flex items-center {% if not forloop.first %}mt-1{% endif %}">
+                    <span class="w-3 h-3 rounded-full bg-{{ forloop.counter|divisibleby:5|yesno:'purple,yellow,green,red,blue' }}-500 mr-2"></span>
+                    <span>{{ component|title }} ({{ percentage }}%)</span>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts Row -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        <!-- Inventory Turnover -->
+        <div class="bg-white rounded-lg shadow p-6">
+            <h3 class="text-lg font-semibold text-gray-700 mb-4">Inventory Turnover</h3>
+            <div class="relative" style="height: 300px;">
+                <canvas id="inventoryTurnoverChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Out of Stock Items -->
+        <div class="bg-white rounded-lg shadow p-6">
+            <h3 class="text-lg font-semibold text-gray-700 mb-4">% Out of Stock Items</h3>
+            <div class="relative" style="height: 300px;">
+                <canvas id="stockOutChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Perfect Order Rate Gauge Chart
+const porCtx = document.getElementById('porChart').getContext('2d');
+new Chart(porCtx, {
+    type: 'doughnut',
+    data: {
+        datasets: [{
+            data: [{{ perfect_order_rate }}, {{ 100|add:"-"|add:perfect_order_rate }}],
+            backgroundColor: ['#3B82F6', '#EF4444'],
+            borderWidth: 0
+        }]
+    },
+    options: {
+        cutout: '70%',
+        plugins: {
+            legend: {
+                display: false
+            },
+            tooltip: {
+                enabled: false
+            }
+        }
+    }
+});
+
+// Cost of Carry Chart
+const cocCtx = document.getElementById('costOfCarryChart').getContext('2d');
+new Chart(cocCtx, {
+    type: 'doughnut',
+    data: {
+        labels: [{% for component in cost_percentages.keys %}'{{ component|title }}'{% if not forloop.last %}, {% endif %}{% endfor %}],
+        datasets: [{
+            data: [{% for percentage in cost_percentages.values %}{{ percentage }}{% if not forloop.last %}, {% endif %}{% endfor %}],
+            backgroundColor: ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6'],
+            borderWidth: 0
+        }]
+    },
+    options: {
+        cutout: '70%',
+        plugins: {
+            legend: {
+                display: false
+            }
+        }
+    }
+});
+
+// Inventory Turnover Chart
+const itCtx = document.getElementById('inventoryTurnoverChart').getContext('2d');
+new Chart(itCtx, {
+    type: 'bar',
+    data: {
+        labels: {{ turnover_labels|safe }},
+        datasets: [{
+            label: 'Turnover',
+            data: {{ turnover_data|safe }},
+            backgroundColor: '#3B82F6',
+            borderWidth: 0
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+            y: {
+                beginAtZero: true,
+                max: Math.max(...{{ turnover_data|safe }}) * 1.2
+            }
+        }
+    }
+});
+
+// Stock Out Chart
+const soCtx = document.getElementById('stockOutChart').getContext('2d');
+new Chart(soCtx, {
+    type: 'line',
+    data: {
+        labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+        datasets: [{
+            label: 'Out of Stock Items',
+            data: {{ stock_out_data|safe }},
+            borderColor: '#3B82F6',
+            backgroundColor: 'rgba(59, 130, 246, 0.1)',
+            fill: true,
+            tension: 0.4
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+            y: {
+                beginAtZero: true,
+                max: Math.max(...{{ stock_out_data|safe }}) * 1.2,
+                ticks: {
+                    callback: function(value) {
+                        return value + '%';
+                    }
+                }
+            }
+        }
+    }
+});
+</script>
+{% endblock %}
